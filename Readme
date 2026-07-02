@@ -1,0 +1,107 @@
+# WhatsApp Chat Analyzer
+
+A Streamlit web app that parses exported WhatsApp chat logs (`.txt`) and generates statistics, timelines, activity heatmaps, word clouds, and emoji breakdowns for the overall group or any individual participant.
+
+## Features
+
+- **Top statistics** — total messages, total words, media shared, and links shared
+- **Monthly & daily timelines** — message volume trends over time
+- **Activity maps**:
+  - Most active day of the week
+  - Most active month
+  - Weekly activity heatmap (day vs. hour)
+- **Most busy users** — who sends the most messages in the group (overall view only)
+- **Word cloud** — visualizes the most frequently used words, with Hinglish (Hindi + English) stopwords filtered out
+- **Most common words** — top 20 words as a horizontal bar chart
+- **Emoji analysis** — most-used emojis, shown as a table and pie chart
+- **Per-user filtering** — run any analysis for the whole group or a single participant via the sidebar
+
+## Project Structure
+
+```
+.
+├── app.py                 # Streamlit UI and orchestration
+├── preprocessor.py         # Parses raw chat export into a structured DataFrame
+├── helper.py                # Stats, timelines, activity maps, word cloud, emoji analysis
+└── stop_hinglish.txt          # Hindi/English stopword list used for word cloud & common words
+```
+
+## Requirements
+
+- Python 3.9+
+- A WhatsApp chat export in `.txt` format (see [Exporting a Chat](#exporting-a-whatsapp-chat) below)
+
+### Dependencies
+
+```
+streamlit
+pandas
+matplotlib
+seaborn
+wordcloud
+urlextract
+emoji
+```
+
+## Installation
+
+1. **Clone/download the project** and navigate into the folder.
+
+2. **Create a virtual environment** (recommended):
+   ```bash
+   python -m venv venv
+   source venv/bin/activate   # Windows: venv\Scripts\activate
+   ```
+
+3. **Install dependencies**:
+   ```bash
+   pip install streamlit pandas matplotlib seaborn wordcloud urlextract emoji
+   ```
+   (Or create a `requirements.txt` with the packages above and run `pip install -r requirements.txt`.)
+
+## Running the App
+
+```bash
+streamlit run app.py
+```
+
+The app will open in your browser at `http://localhost:8501`.
+
+## Usage
+
+1. Export a WhatsApp chat as a `.txt` file (instructions below) and upload it via the sidebar.
+2. Select a participant from the dropdown, or leave it as **Overall** to analyze the whole chat.
+3. Click **Show Analysis** to generate:
+   - Top statistics
+   - Monthly and daily timelines
+   - Busy day/month bar charts and weekly heatmap
+   - Most busy users (Overall view only)
+   - Word cloud and most common words
+   - Emoji usage breakdown
+
+## Exporting a WhatsApp Chat
+
+1. Open the chat in WhatsApp.
+2. Tap the three-dot menu → **More** → **Export chat**.
+3. Choose **Without Media**.
+4. Save/share the resulting `.txt` file and upload it to the app.
+
+> The parser expects the default WhatsApp export timestamp format `DD/MM/YY, H:MM am/pm - Sender: Message`. Exports from some regions/devices use a different date or time format (e.g., 24-hour clock, different separators) and may need adjustments to the regex pattern in `preprocessor.py`.
+
+## How It Works
+
+- **`preprocessor.py`** uses a regex to split the raw export into date, time, sender, and message fields, then derives extra columns (year, month, day name, hour, time-of-day period, etc.) used throughout the app.
+- **`helper.py`** contains all the analysis functions (`fetch_stats`, `most_busy_user`, `create_wordcloud`, `most_common_words`, `emoji_analysis`, timeline/activity functions), each accepting the selected user and the preprocessed DataFrame.
+- **`stop_hinglish.txt`** is a combined Hindi (transliterated) and English stopword list, filtered out before generating the word cloud and common-words chart so that filler words don't dominate the results.
+- System messages (media omitted, chat notices, deleted messages) are filtered out before word/emoji analysis.
+
+## Known Limitations
+
+- Only supports the standard WhatsApp `.txt` export format; other locales/formats may fail to parse.
+- No group-vs-individual chat auto-detection — group metadata messages (e.g., "X added Y") may appear as `User: None` rows and are excluded from per-user stats.
+- Large chat exports may be slow to process due to row-by-row word/emoji extraction.
+- `stop_hinglish.txt` must be present in the working directory at runtime (it's opened via a relative path).
+
+## License
+
+Add your preferred license here (e.g., MIT).
